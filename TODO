@@ -1,0 +1,38 @@
+
+
+django
+
+drf
+restframework
+
+
+http method
+post, get
+
+get, post, put, patch, delete
+
+api/v1/products         get         - list
+api/v1/products         post        - create
+api/v1/products/45      get         - retrieve
+api/v1/products/45      put,patch   - update
+api/v1/products/45      delete      - destroy
+
+
+
+
+✅GET	    /posts
+✅GET	    /posts/1
+✅GET	    /posts/1/comments
+GET	        /comments?postId=1
+✅POST	    /posts
+✅PUT	    /posts/1
+✅PATCH	    /posts/1
+✅DELETE	/posts/1
+
+
+GET 	    /comments
+GET 	    /comments/1
+POST    	/comments
+PUT 	    /comments/1
+PATCH   	/comments/1
+DELETE  	/comments/1
