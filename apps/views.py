@@ -1,62 +1,48 @@
+from django.contrib.admin import actions
+from django.db.models.aggregates import Count
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema
-from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveAPIView
+from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.generics import ListCreateAPIView
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
+from rest_framework_simplejwt.views import TokenObtainPairView
 
-from apps.models import Post, Comment, User
-from apps.serializers import PostModelSerializer, CommentModelSerializer, UserDetailModelSerializer, \
-    UserModelSerializer, UserCreateModelSerializer
-
-
-@extend_schema(tags=['User'])
-class UserListCreateAPIView(ListCreateAPIView):
-    queryset = User.objects.order_by('-id')
-    serializer_class = UserModelSerializer
-
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return UserCreateModelSerializer
-        return super().get_serializer_class()
+from apps.filters import PostFilter
+from apps.models import Post
+from apps.models.posts import Like
+from apps.serializers import PostModelSerializer, CustomTokenObtainPairSerializer
 
 
-@extend_schema(tags=['User'])
-class UserRetrieveAPIView(RetrieveAPIView):
-    queryset = User.objects.order_by('-id')
-    serializer_class = UserDetailModelSerializer
-    lookup_field = 'username'
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
-@extend_schema(tags=['Post'])
-class PostListCreateAPIView(ListCreateAPIView):
-    queryset = Post.objects.order_by('-id')
-    serializer_class = PostModelSerializer
-    filter_backends = (DjangoFilterBackend,)
-    # filterset_fields = ('userId',)
-    # filterset_class = PostFilter
-
-
-@extend_schema(tags=['Post'])
-class PostRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+class PostModelViewSet(ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostModelSerializer
+    http_method_names = ['get', 'post']
 
+    @action(detail=True, methods=['post'], url_path='like', serializer_class=None)
+    def set_like(self, request, pk=None):
+        Like.objects.get_or_create(user=request.user, post_id=pk)
+        return Response({'status': 'ok'})
 
-@extend_schema(tags=['Post'])
-class PostCommentListAPIView(ListAPIView):
-    queryset = Comment.objects.all()
-    serializer_class = CommentModelSerializer
+    @action(detail=True, methods=['post'], url_path='unlike', serializer_class=None)
+    def set_unlike(self, request, pk=None):
+        Like.objects.filter(user=request.user, post_id=pk).delete()
+        return Response({'status': 'ok'})
 
-    def get_queryset(self):
-        qs = super().get_queryset()
-        pk = self.kwargs.get('pk')
-        return qs.filter(postId=pk)
-
-
-@extend_schema(tags=['Comment'])
-class CommentListAPIView(ListAPIView):
-    queryset = Comment.objects.all()
-    serializer_class = CommentModelSerializer
-    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
-    filterset_fields = ('postId', 'email')
-    search_fields = ('email', 'name')
-    ordering_fields = ('id', 'postId')
+# class PostListCreateAPIView(ListCreateAPIView):
+#     queryset = Post.objects.all()
+#     serializer_class = PostModelSerializer
+#     filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
+#     filterset_class = PostFilter
+#     ordering_fields = 'created_at', 'views_count', 'likes_count'
+#     search_fields = 'title', 'content'
+#
+#     def get_queryset(self):
+#         qs = super().get_queryset()
+#         return qs.annotate(likes_count=Count('likes'))
+#
+#

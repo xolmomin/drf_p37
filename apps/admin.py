@@ -1,8 +1,4 @@
-from django.contrib import admin
+from django.contrib.admin import ModelAdmin
 
-from apps.models import Comment
+from apps.models import Post
 
-
-@admin.register(Comment)
-class CommentModelAdmin(admin.ModelAdmin):
-    list_display = ['id', 'postId']

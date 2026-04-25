@@ -1,103 +1,122 @@
 
+ISHGA
+🚀 Advanced Topshiriq: Multi-User Blog + Interaction API
+🎯 Maqsad:
 
-django
+Quyidagi barcha tushunchalarni real loyihadagidek ishlatish:
 
-drf
-restframework
+Murakkab model relationlar
+Custom serializer logic
+Advanced filter/search
+JWT + role based permission
+Admin customization
+🧩 1. Model struktura (murakkabroq)
 
+Quyidagi modellerni yarat:
 
-http method
-post, get
+👤 User (custom user bo‘lsa yaxshi)
+username
+email
+role (ADMIN, AUTHOR, READER)
+📝 Post
+title
+content
+author (FK → User)
+category (FK → Category)
+tags (ManyToMany → Tag)
+is_published
+views_count
+created_at
+🗂 Category
+name
+🏷 Tag
+name
+❤️ Like
+user
+post
 
-get, post, put, patch, delete
+👉 Constraint qo‘shing:
 
-api/v1/products         get         - list
-api/v1/products         post        - create
-api/v1/products/45      get         - retrieve
-api/v1/products/45      put,patch   - update
-api/v1/products/45      delete      - destroy
+1 user 1 postga faqat 1 marta like bosishi mumkin
+🔄 2. Serializer (advanced logic)
+PostSerializer:
+author read-only
+likes_count (annotate yoki method field)
+is_liked (request.user ga qarab) ❌
+tags nested yoki slug orqali
 
+👉 Bonus:
 
+create/update da taglarni avtomatik create qilsin
+🔐 3. JWT Auth
 
+djangorestframework-simplejwt
 
-✅GET	    /posts
-✅GET	    /posts/1
-✅GET	    /posts/1/comments
-GET	        /comments?postId=1
-✅POST	    /posts
-✅PUT	    /posts/1
-✅PATCH	    /posts/1
-✅DELETE	/posts/1
+Qo‘shimcha:
 
+Custom token ichiga role qo‘shing
+🔑 4. Permission (murakkab)
 
-GET 	    /comments
-GET 	    /comments/1
-POST    	/comments
-PUT 	    /comments/1
-PATCH   	/comments/1
-DELETE  	/comments/1
+Custom permission yoz:
 
+Rules:
+ADMIN → hamma narsani qila oladi
+AUTHOR → faqat o‘z postini edit/delete
+READER → faqat o‘qiydi
 
-/albums?userId=2
+👉 Custom class yoz (IsAuthorOrAdmin kabi)
 
+🔎 5. Advanced Filter/Search
 
-{
-    "userId": 2,
-    "id": 11,
-    "title": "quam nostrum impedit mollitia quod et dolor"
-}
+django-filter
 
+Filter:
+category
+tags (multi filter)
+created_at range
+views_count > X
 
+Search:
+title
+content
 
-filter, search, order by, pagination
-https://jsonplaceholder.typicode.com/todos?userId=2
-serializer
+Ordering:
+created_at
+views_count
+likes_count
 
+⚡ 6. ViewSet (pro level)
+PostViewSet:
+CRUD
+/like/ custom action
+/unlike/ custom action
+/popular/ → eng ko‘p ko‘rilgan postlar
+/my-posts/ → user postlari
 
-# django filters, pagination
-# https://www.django-rest-framework.org/api-guide/serializers/#declaring-serializers
-# serializers
-# serializers, auth, jwt
+👉 views_count:
 
+retrieve qilinganda +1 bo‘lsin
+🛠 7. Admin panel (pro customization)
 
+Admin’da:
 
+Inline Like ko‘rsatish
+list_display:
+title, author, views_count, is_published
+filter:
+category, is_published
+search:
+title, content
 
-oson
-filterset_fields = ('postId', 'email')
+👉 Bonus:
 
-
-o'rtacha
-class PostFilter(FilterSet):
-    min_id = NumberFilter(field_name='id', lookup_expr='gte')
-    max_id = NumberFilter(field_name='id', lookup_expr='lte')
-
-    class Meta:
-        model = Post
-        fields = ('userId',)
-
-
-qiyin
-class PostFilter(FilterSet):
-    comment_count = NumberFilter(method='filter_comment_count')
-
-    class Meta:
-        model = Post
-        fields = ()
-
-    def filter_comment_count(self, queryset, key, value):
-        return queryset.annotate(comment_count=Count('comments')).filter(comment_count__gte=value)
-
-
-queryset
-
-API
-serializer
-schema
-marshmallow
-
-1.
-object -> json
-json -> object
-
-2. validation
+views_count ni readonly qiling
+🧠 8. Performance (important)
+select_related
+prefetch_related
+annotate bilan likes_count
+📄 9. Default Settings
+DEFAULT_PERMISSION → IsAuthenticated
+Pagination (limit/offset)
+Throttling qo‘shish (optional)
 
