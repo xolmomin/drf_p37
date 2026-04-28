@@ -1,122 +1,164 @@
+🟢 EASY (Starter Level)
 
-ISHGA
-🚀 Advanced Topshiriq: Multi-User Blog + Interaction API
-🎯 Maqsad:
+👉 Maqsad: DRF asoslarini to‘g‘ri ishlatish
 
-Quyidagi barcha tushunchalarni real loyihadagidek ishlatish:
-
-Murakkab model relationlar
-Custom serializer logic
-Advanced filter/search
-JWT + role based permission
-Admin customization
-🧩 1. Model struktura (murakkabroq)
-
-Quyidagi modellerni yarat:
-
-👤 User (custom user bo‘lsa yaxshi)
-username
-email
-role (ADMIN, AUTHOR, READER)
-📝 Post
+📌 Task: Simple Blog API
+1. Model
+Post:
 title
 content
 author (FK → User)
-category (FK → Category)
-tags (ManyToMany → Tag)
-is_published
-views_count
 created_at
-🗂 Category
-name
-🏷 Tag
-name
-❤️ Like
-user
-post
+is_published
 
-👉 Constraint qo‘shing:
+2. Serializer
+PostSerializer
+author → read_only
+created_at → formatted (%Y-%m-%d)
+3. View
+PostViewSet
+CRUD ishlaydi
+4. Auth
 
-1 user 1 postga faqat 1 marta like bosishi mumkin
-🔄 2. Serializer (advanced logic)
-PostSerializer:
-author read-only
-likes_count (annotate yoki method field)
-is_liked (request.user ga qarab) ❌
-tags nested yoki slug orqali
-
-👉 Bonus:
-
-create/update da taglarni avtomatik create qilsin
-🔐 3. JWT Auth
-
-djangorestframework-simplejwt
-
-Qo‘shimcha:
-
-Custom token ichiga role qo‘shing
-🔑 4. Permission (murakkab)
-
-Custom permission yoz:
-
-Rules:
-ADMIN → hamma narsani qila oladi
-AUTHOR → faqat o‘z postini edit/delete
-READER → faqat o‘qiydi
-
-👉 Custom class yoz (IsAuthorOrAdmin kabi)
-
-🔎 5. Advanced Filter/Search
-
-django-filter
-
+JWT (djangorestframework-simplejwt)
+login,  refresh
+5. Permission
+Default: IsAuthenticated
+Faqat author:
+edit, delete
+6. Filter & Search
 Filter:
-category
-tags (multi filter)
-created_at range
-views_count > X
-
+is_published
 Search:
 title
 content
 
-Ordering:
+7. Admin
+list_display:
+title
+author
+is_published
+search:
+title
+
+
+
+
+🟡 MIDDLE (Real API Level)
+
+👉 Maqsad: relation + custom logic
+📌 Task: Multi-user Blog
+1. Model (expand)
+Qo‘shing:
+Category
+Tag (M2M)
+Like
+
+👉 Constraint:
+1 user → 1 like per post
+2. Serializer (advanced)
+
+PostSerializer:
+Qo‘shing:
+
+likes_count
+is_liked
+
+create/update:
+taglarni avtomatik create qilsin
+
+3. Permission
+Custom yozing:
+ADMIN → hamma narsa
+AUTHOR → o‘z posti
+READER → faqat read
+
+4. ViewSet
+Qo‘shing:
+/like/
+/unlike/
+/my-posts/
+5. Filter
+
+Qo‘shing:
+category
+tags (multi)
+created_at range
+6. Search + Ordering
+search:
+title
+content
+ordering:
 created_at
 views_count
-likes_count
+7. Admin
+Inline Like
+views_count readonly
 
-⚡ 6. ViewSet (pro level)
-PostViewSet:
-CRUD
-/like/ custom action
-/unlike/ custom action
-/popular/ → eng ko‘p ko‘rilgan postlar
-/my-posts/ → user postlari
 
-👉 views_count:
 
-retrieve qilinganda +1 bo‘lsin
-🛠 7. Admin panel (pro customization)
+🔴 HARD (Production Level)
 
-Admin’da:
+👉 Maqsad: scalable, optimized API
 
-Inline Like ko‘rsatish
-list_display:
-title, author, views_count, is_published
-filter:
-category, is_published
-search:
-title, content
-
-👉 Bonus:
-
-views_count ni readonly qiling
-🧠 8. Performance (important)
+📌 Task: Advanced Blog System
+1. Performance
 select_related
 prefetch_related
-annotate bilan likes_count
-📄 9. Default Settings
-DEFAULT_PERMISSION → IsAuthenticated
-Pagination (limit/offset)
-Throttling qo‘shish (optional)
+annotate(likes_count)
+2. Advanced ViewSet
 
+Qo‘shing:
+
+/popular/ → views_count bo‘yicha
+retrieve → views_count +1
+3. Advanced Filter
+
+Qo‘shing:
+
+views_count > X
+likes_count filter
+tags multi filter
+4. JWT Custom
+
+Token ichiga qo‘shing:
+
+role
+5. Pagination
+limit/offset
+6. Throttling
+anon: slow
+user: faster
+7. Serializer Optimization
+nested vs slug
+dynamic fields
+8. Admin Pro Level
+filter:
+category
+is_published
+search:
+title
+content
+display:
+views_count
+likes_count
+9. Bonus (Senior touch)
+caching (Redis)
+signals:
+post create → notify
+soft delete
+
+
+dynamic field in api
+soft delete
+hard delete
+
+
+admin
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc3ODI0OTI3LCJpYXQiOjE3NzczOTI5MjcsImp0aSI6ImUwMWI1YjVmOWMxOTRjOWM4NjI1MWUxYWE1N2IxMGVhIiwidXNlcl9pZCI6IjEiLCJyb2xlIjoiYWRtaW4ifQ.eXrPN-YhkC9LnbSlRXE5-9BeqLSBCOlGF1xtXnwMmjY
+
+botir
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc3ODI0OTQ3LCJpYXQiOjE3NzczOTI5NDcsImp0aSI6IjY5ZDM0OGFhZTMyMzQ2N2Q5NTAxMmNmYzA1NjVlNmJiIiwidXNlcl9pZCI6IjIiLCJyb2xlIjoiYXV0aG9yIn0.ESMxrHOAJTDERuejBYF1v-beXh8CIMN-HS4ccbsDG7o
+
+user
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc3ODI1MTAxLCJpYXQiOjE3NzczOTMxMDEsImp0aSI6IjZmMWVlZDllN2JjZTQwMGQ4MDFhODY1YmQwYTA0MjExIiwidXNlcl9pZCI6IjMiLCJyb2xlIjoiYXV0aG9yIn0.XfqhThKBrzvM9G26M2-RGaOuBGhL0uGwSd6-cwNwEwI
