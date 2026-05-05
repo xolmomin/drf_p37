@@ -1,33 +1,69 @@
-from django.contrib.admin import actions
+import os
+
 from django.db.models import Exists, OuterRef, Value, BooleanField
 from django.db.models.aggregates import Count
-from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiParameter
+from django.http import FileResponse
 from rest_framework.decorators import action
-from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.generics import ListCreateAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import RetrieveAPIView, CreateAPIView
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet, ViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from apps.filters import PostFilter
-from apps.models import Post
-from apps.models.posts import Like
+from apps.models import Post, User, Category
+from apps.models.posts import Like, CategoryImage
 from apps.permissions import IsAuthorOrReadOnly
-from apps.serializers import PostModelSerializer, CustomTokenObtainPairSerializer
+from apps.serializers import PostModelSerializer, CustomTokenObtainPairSerializer, UserModelSerializer, \
+    CategoryImageModelSerializer, CategorySerializer
+from root.settings import BASE_DIR
+
+
+class CategoryCreateAPIView(CreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [AllowAny]
+
+
+class CategoryImageCreateAPIView(CreateAPIView):
+    queryset = CategoryImage.objects.all()
+    serializer_class = CategoryImageModelSerializer
+    permission_classes = [AllowAny]
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 
+class ExcelAPIView(APIView):
+    permission_classes = []
+
+    def get(self, request):
+        """
+           Return a list of all users.
+        """
+        return FileResponse(open(os.path.join(BASE_DIR, 'lesson.pdf'), 'rb'), as_attachment=True)
+
+
+class UserDestroyAPIView(RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserModelSerializer
+
+    def get_object(self):
+        return self.request.user
+
+
+class CustomViewSet(ViewSet):
+    pass
+
+
 class PostModelViewSet(ModelViewSet):
-    queryset = Post.objects.filter(is_deleted=False)
+    queryset = Post.objects.filter()
     serializer_class = PostModelSerializer
     permission_classes = [IsAuthorOrReadOnly]
-    http_method_names = ['get', 'post', 'patch']
+
+    # http_method_names = ['get', 'post', 'patch']
+    # pagination_class = None
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -63,11 +99,11 @@ class PostModelViewSet(ModelViewSet):
     #     return qs
 
     @action(detail=True, methods=['post'], url_path='like', serializer_class=None)
-    def set_like(self, request, pk=None):
+    def set_like(self, request, pk):
         Like.objects.get_or_create(user=request.user, post_id=pk)
         return Response({'status': 'ok'})
 
-    @action(detail=True, methods=['post'], url_path='unlike', serializer_class=None)
+    @action(detail=True, methods=['post'], url_path='unlike', url_name='unlike', serializer_class=None)
     def set_unlike(self, request, pk=None):
         Like.objects.filter(user=request.user, post_id=pk).delete()
         return Response({'status': 'ok'})

@@ -1,23 +1,71 @@
-from django.contrib.auth.base_user import AbstractBaseUser
-from django.db.models import Model
-from rest_framework.fields import IntegerField, SerializerMethodField, HiddenField, CurrentUserDefault, CharField, empty
-from rest_framework.serializers import ModelSerializer, ListSerializer
+from rest_framework.fields import empty, ImageField, ListField, CharField, IntegerField
+from rest_framework.serializers import ModelSerializer, Serializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from apps.models import Post, Tag
-from apps.models.posts import Like
+from apps.models import Post, Tag, User, Category
+from apps.models.posts import CategoryImage
+
+
+class CategorySerializer(Serializer):
+    pk = IntegerField(read_only=True)
+    name = CharField(max_length=255, default="Botir")
+
+    def create(self, validated_data):
+        return Category.objects.create(**self.validated_data)
+
+
+class UserModelSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = 'id', 'username'
+
+
+class UserRegisterModelSerializer(ModelSerializer):
+    confirm_password = CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = 'id', 'username', 'first_name', 'email', 'phone', 'password', 'confirm_password'
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def validate_phone(self, value:str):
+        if not value.startswith('+998'):
+            raise ValidationError("Nomer xato")
+        return value
+
+    def validate(self, attrs):
+        if attrs.get('password') != attrs.pop('confirm_password', None):
+            raise ValidationError("Passwords do not match.")
+        return attrs
+
+
+class CategoryImageModelSerializer(ModelSerializer):
+    images = ListField(child=ImageField(), required=False)
+
+    class Meta:
+        model = CategoryImage
+        exclude = ['image']
+
+    def create(self, validated_data):
+        images = validated_data.pop('images', [])
+        category = validated_data.get('category')
+        for image in images:
+            CategoryImage.objects.create(category=category, image=image)
+        return
 
 
 class PostModelSerializer(ModelSerializer):
-    likes_count = SerializerMethodField()
-    is_liked = SerializerMethodField()
-    author = HiddenField(default=CurrentUserDefault())
-    tags = ListSerializer(child=CharField(max_length=25), write_only=True)
+    # likes_count = SerializerMethodField()
+    # is_liked = SerializerMethodField()
+    # author = HiddenField(default=CurrentUserDefault())
+    # tags = ListSerializer(child=CharField(max_length=25), write_only=True)
 
     class Meta:
         model = Post
-        fields = 'id', 'title', 'content', 'author', 'category', 'is_published', 'tags', 'views_count', 'likes_count', 'is_liked'
-        read_only_fields = ('views_count',)
+        fields = 'id', 'title',  # 'content', 'author', 'category', 'is_published', 'tags', 'views_count', 'likes_count', 'is_liked'
+        # read_only_fields = ('views_count',)
 
     def __init__(self, instance=None, data=empty, **kwargs):
         fields = kwargs['context']['request'].query_params.get('fields')

@@ -1,9 +1,15 @@
-from django.db.models import Model, ForeignKey, CASCADE, ManyToManyField
+from django.db.models import Model, ForeignKey, CASCADE, ManyToManyField, ImageField
 from django.db.models.fields import CharField, TextField, DateTimeField, PositiveIntegerField, BooleanField
+from django_ckeditor_5.fields import CKEditor5Field
 
 
 class Category(Model):
     name = CharField(max_length=255)
+
+
+class CategoryImage(Model):
+    category = ForeignKey('apps.Category', CASCADE, related_name='images')
+    image = ImageField(upload_to='category/images/%Y/%m/%d', blank=True, null=True)
 
 
 class Tag(Model):
@@ -12,7 +18,7 @@ class Tag(Model):
 
 class Post(Model):
     title = CharField(max_length=255)
-    content = TextField(blank=True)
+    content = CKEditor5Field(blank=True)
     author = ForeignKey('apps.User', CASCADE, related_name='posts')
     category = ForeignKey('apps.Category', CASCADE, related_name='posts')
     is_published = BooleanField(db_default=True)
